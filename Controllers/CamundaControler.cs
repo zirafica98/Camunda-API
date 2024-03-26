@@ -1,41 +1,68 @@
+using Camunda_api.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
 namespace Camunda_api.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [Route("api/[controller]")]
     public class CamundaController : ControllerBase
     {
         private readonly ILogger<CamundaController> _logger;
+        private readonly IConfiguration _config;
 
-        public CamundaController(ILogger<CamundaController> logger)
+        public CamundaController(ILogger<CamundaController> logger, IConfiguration config)
         {
             _logger = logger;
+            _config = config;
         }
 
         [HttpGet]
-        [Route("getCodeBook")]
-        /*[SwaggerOperation(Summary = "Dohvati CodeBook", Description = "Dohvati podatke iz CodeBook servisa.")]
-        [SwaggerResponse(200, "Success", typeof(string))]*/
-        public async Task<IActionResult> GetCodeBook() // Uklonjen 'static' atribut
+        [Route("getProcessDefinition/{processName}")]
+        public Task<string> GetProcessDefinition([FromServices] IHttpClientFactory factory, string processName)
         {
-            string apiUrl = "https://jsonplaceholder.typicode.com/todos/1";
-            /*string apiUrl = "https://rbrsdp01test.rbj.co.yu:8444/ol/v1/codebook/SC3TUGPR";*/
+            var client = factory.CreateClient("camunda");
 
-            using (HttpClient client = new HttpClient())
-            {
-                HttpResponseMessage response = await client.GetAsync(apiUrl);
+            return client.GetStringAsync($"process-definition/key/{processName}");
+        }
 
-                if (response.IsSuccessStatusCode)
-                {
-                    return Ok(await response.Content.ReadAsStringAsync());
-                }
-                else
-                {
-                    return StatusCode((int)response.StatusCode, $"HTTP greška: {response.StatusCode}");
-                }
-            }
+        [HttpGet]
+        [Route("getProcessDefinitionXML/{processName}")]
+        public Task<string> GetProcessDefinitionXML([FromServices] IHttpClientFactory factory, string processName)
+        {
+            var client = factory.CreateClient("camunda");
+
+            return client.GetStringAsync($"process-definition/key/{processName}/xml");
+        }
+
+        [HttpPost]
+        [Route("startProcessInstance/{processName}")]
+        public Task<string> StartProcessInstance([FromServices] IHttpClientFactory factory, string processName)
+        {          
+            var client = factory.CreateClient("camunda");
+
+            StringContent httpContent = new StringContent("", System.Text.Encoding.UTF8, "application/json");
+            var result = client.PostAsync($"process-definition/key/{processName}/start", httpContent);
+
+            return result.Result.Content.ReadAsStringAsync();
+        }
+
+        [HttpGet]
+        [Route("getProcessInstance/{id}")]
+        public Task<string> GetProcessInstance([FromServices] IHttpClientFactory factory, string id)
+        {
+            var client = factory.CreateClient("camunda");
+
+            return client.GetStringAsync($"process-instance/{id}");
+        }
+
+        [HttpGet]
+        [Route("getActiveTask/{processId}")]
+        public Task<string> GetActiveTask([FromServices] IHttpClientFactory factory, string processId)
+        {
+            var client = factory.CreateClient("camunda");
+
+            return client.GetStringAsync($"task?processInstanceId={processId}");
         }
     }
 }
