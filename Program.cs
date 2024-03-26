@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using System.Data.SqlClient;
 using System.Data;
+using System.Net;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,6 +30,20 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+builder.Services.AddHttpClient("camunda", httpClient =>
+{
+    httpClient.BaseAddress = new Uri(configuration.GetSection("BaseAddresses:Camunda").Get<string>());
+});
+
+builder.Services.AddHttpClient("codebookRetail", httpClient =>
+{
+    httpClient.BaseAddress = new Uri(configuration.GetSection("BaseAddresses:CodebookRetail").Get<string>());
+});
+
+builder.Services.AddHttpClient("codebookCorporate", httpClient =>
+{
+    httpClient.BaseAddress = new Uri(configuration.GetSection("BaseAddresses:CodebookCorporate").Get<string>());
+});
 
 
 var app = builder.Build();
