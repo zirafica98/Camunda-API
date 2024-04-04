@@ -64,5 +64,17 @@ namespace Camunda_api.Controllers
 
             return client.GetStringAsync($"task?processInstanceId={processId}");
         }
+
+        [HttpPost]
+        [Route("completeActiveTask/{taskId}")]
+        public Task<string> CompleteTask([FromServices] IHttpClientFactory factory, string taskId)
+        {
+            var client = factory.CreateClient("camunda");
+
+            StringContent httpContent = new StringContent("", System.Text.Encoding.UTF8, "application/json");
+            var result = client.PostAsync($"task/{taskId}/complete", httpContent);
+
+            return result.Result.Content.ReadAsStringAsync();
+        }
     }
 }
